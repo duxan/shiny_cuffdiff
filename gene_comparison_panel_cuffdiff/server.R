@@ -1,55 +1,62 @@
 source("load_packages.R")
 
 shinyServer(function(input, output) {
-# This section defines a CuffGeneSet for a specific gene which is used in the subsequent display steps
-# This is to avoid re-loading the CuffGeneSet many times
+  # This section defines a CuffGeneSet for a specific gene which is used in the subsequent display steps
+  # This is to avoid re-loading the CuffGeneSet many times
   
   my_genes <- reactive({
     mycufflinksdata <- readCufflinks(dir =  input$cuffdiff_dir,
                                      genome = input$cuffdiff_genome, 
-                                     gtfFile = input$cuffdiff_gtf,
-                                     rebuild = input$rebuild)
+                                     gtfFile = input$cuffdiff_gtf) #,
+    #rebuild = input$rebuild)
     mylist<-unlist(strsplit(input$gene_list, " "))
     getGenes(mycufflinksdata,geneIdList=mylist, sampleIdList = input$sns)
-    })
+  })
   
-# Now the CuffGeneSet is defined
-
-# The first text box displays some text-based information about the CuffGeneSet
+  output$select_genes <- renderText({
+    #if (input$cuffdiff_dir.length > 0){
+    cuffData <- readCufflinks(input$cuffdiff_dir)
+    getSig(cuffData,level="genes",alpha=0.05)
+    #}
+  })
   
-# Display the gene short name
-
-   output$gsn <- renderText({
-      if (input$gene_list != "") {
-          paste("Gene short name: ", as.character(featureNames(my_genes())$gene_short_name))
-      }
-    })
-
-# Display the XLOC_XXXXXX tracking ID
-   
-   output$id <- renderText({
-     if (input$gene_list != "") {
-       paste("Tracking ID : ", as.character(featureNames(my_genes())$tracking_id))
-     }
-   })
-   
-   output$sample_name_selector <- renderUI({
-     if (input$gene_list != "") {
-       number_of_samples<-length(samples(my_genes()))/length(unlist(strsplit(input$gene_list, " ")))
-       sample_names_for_checkbox<-as.character(samples(my_genes())[1:number_of_samples])
-       checkboxGroupInput("sns","Restrict plot to these conditions (uncheck all to reset)", sample_names_for_checkbox)
-     }
-   }) 
-#     ()
+  # Now the CuffGeneSet is defined
   
-# The main panel displays tabbed expression plot of the gene and isoforms
-   
-   # Display heatmap
+  # The first text box displays some text-based information about the CuffGeneSet
+  
+  # Display the gene short name
+  
+  output$gsn <- renderUI({
+    if (input$gene_list != "") {
+      HTML(paste("Gene short name: ", as.character(featureNames(my_genes())$gene_short_name), collapse = '<br/>'))
+    }
+  })
+  
+  # Display the XLOC_XXXXXX tracking ID
+  
+  output$id <- renderText({
+    if (input$gene_list != "") {
+      #paste("Tracking ID: ", as.character(featureNames(my_genes())$tracking_id))
+    }
+  })
+  
+  output$sample_name_selector <- renderUI({
+    if (input$gene_list != "") {
+      number_of_samples<-length(samples(my_genes()))/length(unlist(strsplit(input$gene_list, " ")))
+      sample_names_for_checkbox<-as.character(samples(my_genes())[1:number_of_samples])
+      checkboxGroupInput("sns","Select conditions (uncheck all to reset)", sample_names_for_checkbox)
+    }
+  }) 
+  #     ()
+  
+  # The main panel displays tabbed expression plot of the gene and isoforms
+  
+  # Display heatmap
   output$heatmap <- renderPlot({
     if (input$gene_list != "") {
-        csHeatmap(my_genes(), replicates = input$reps)
+      csHeatmap(my_genes(), replicates = input$reps)
     }
-    })
+  })
   # Display barplot
   output$barplot <- renderPlot({
     if (input$gene_list != "") {
@@ -57,8 +64,8 @@ shinyServer(function(input, output) {
     }
   })
   
-
-
+  
+  
   
 })
 

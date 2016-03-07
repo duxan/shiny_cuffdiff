@@ -1,44 +1,59 @@
 #!/bin/R
 
 shinyUI(fluidPage(
+  
   titlePanel("Multi-gene comparison plots"),
   
   sidebarLayout(
     sidebarPanel(
-      textInput("cuffdiff_dir", label = "Full path to your Cuffdiff directory", value = ""),
-      checkboxInput("rebuild", label
-                    = "Rebuild cuffdiff database (very slow)", value = FALSE),
-      conditionalPanel(
-        condition = "input.rebuild == true",
-        textInput("cuffdiff_gtf", label = "Full path to your GTF file (optional, but recommended)"),
-        textInput("cuffdiff_genome", label = "Genome name (Optional, free text)")
-      ),
-      radioButtons("inputtype", "Input type (File input not functional, to be added soon):",
-                   c("List" = "list",
-                     "File" = "file")),
-      conditionalPanel(
-        condition = "input.inputtype == 'list'",
-        textInput("gene_list", label = "Gene list: Use the gene short name (e.g. ACTB) or XLOC numbers (in the format XLOC_XXXXXX). Separate gene names or XLOC numbers with a space.", value = "")
-      ),
-      conditionalPanel(
-        condition = "input.inputtype == 'file'",
-        fileInput("gene_list_file", label = "Gene list file")
-      ),
-      checkboxInput("reps", label="Include replicates ? (Not relevant for Barplot)", value = FALSE),
-      submitButton(text="Plot!")
-      ),
+      textInput("cuffdiff_dir", label = "Path to your Cuffdiff directory", value = ""),
+      #checkboxInput("rebuild", label
+      #              = "Rebuild cuffdiff database (very slow)", value = FALSE),
+      #conditionalPanel(
+      #  condition = "input.rebuild == true",
+      #  textInput("cuffdiff_gtf", label = "Full path to your GTF file (optional, but recommended)"),
+      #  textInput("cuffdiff_genome", label = "Genome name (Optional, free text)")
+      #),
+      tabsetPanel(
+        tabPanel("Browse", style = "overflow-y: scroll; height: 10em;",
+                 br(),
+                 p("Enter dir above, then scroll to see all gene IDs:"),
+                 conditionalPanel(
+                   condition = "input.cuffdiff_dir.length > 0",
+                   uiOutput("select_genes")
+                 )), 
+        tabPanel("Input", 
+                 br(),
+                 #radioButtons("inputtype", "Input type (File not functional):",
+                 #             c("List" = "list",
+                 #               "File" = "file")),
+                 #conditionalPanel(
+                 #  condition = "input.inputtype == 'list'",
+                 strong("Gene list space separated"),
+                 p("Use the gene short name (e.g. ACTB) or XLOC numbers (in the format XLOC_XXXXXX). Separate gene names or XLOC numbers with a space."),
+                 textInput("gene_list", label = "", value = ""),
+                 #),
+                 #conditionalPanel(
+                 # condition = "input.inputtype == 'file'",
+                 #  fileInput("gene_list_file", label = "Gene list file")
+                 #),
+                 checkboxInput("reps", label="Include replicates ? (Not relevant for Barplot)", value = FALSE)#,
+                 #submitButton(text="Plot!")
+        )
+      )
+    ),
     sidebarPanel(strong("Gene information"),
-                          textOutput("gsn"), 
-                          textOutput("id"),
-                          uiOutput("sample_name_selector"))
+                 uiOutput("gsn"), 
+                 textOutput("id"),
+                 uiOutput("sample_name_selector"))
   ),
   
   mainPanel(position = "right",
-    tabsetPanel(
-      tabPanel("Heatmap",plotOutput("heatmap")),
-      tabPanel("Barplot", plotOutput("barplot"))
-    )
-)))
+            tabsetPanel(
+              tabPanel("Heatmap",plotOutput("heatmap")),
+              tabPanel("Barplot", plotOutput("barplot"))
+            )
+  )))
 
 
 ### This file is part of shiny_cuffdiff.
